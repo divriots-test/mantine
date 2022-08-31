@@ -27,6 +27,7 @@
     "conflicts": "esno scripts/check-conflicts",
     "clean": "rimraf src/*/{esm,cjs,lib,dist} src/**/*.tsbuildinfo",
     "storybook": "esno scripts/storybook-start",
+    "storybook:static": "esno scripts/storybook-static",
     "test": "npm run prettier:test && npm run syncpack && npm run typecheck && npm run lint && npm run jest",
     "docs": "npm run docs:clean && npm run docs:docgen && cd docs && npm start",
     "docs:typecheck": "cd docs && npm run typecheck",

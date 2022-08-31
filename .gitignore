@@ -31,6 +31,7 @@ docs/.docgen/
 *.tsbuildinfo
 
 # project
+sb-dist
 .eslintcache
 docs/.cache
 docs/public
