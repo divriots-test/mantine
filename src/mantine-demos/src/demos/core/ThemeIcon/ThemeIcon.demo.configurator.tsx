@@ -1,13 +1,14 @@
 import React from 'react';
-import { IconPhoto } from '@tabler/icons';
-import { ThemeIcon, ThemeIconProps } from '@mantine/core';
+import { IconPhoto } from '@tabler/icons-react';
+import { MantineDemo } from '@mantine/ds';
+import { ThemeIcon, ThemeIconProps, rem } from '@mantine/core';
 
 const iconSizes = {
-  xs: 10,
-  sm: 12,
-  md: 16,
-  lg: 20,
-  xl: 24,
+  xs: rem(10),
+  sm: rem(12),
+  md: rem(16),
+  lg: rem(20),
+  xl: rem(24),
 };
 
 function Wrapper(props: ThemeIconProps) {
@@ -22,7 +23,7 @@ function Wrapper(props: ThemeIconProps) {
 
 const codeTemplate = (props: string) => `
 import { ThemeIcon } from '@mantine/core';
-import { IconPhoto } from '@tabler/icons';
+import { IconPhoto } from '@tabler/icons-react';
 
 function Demo() {
   return (
@@ -40,13 +41,14 @@ export const configurator: MantineDemo = {
   configurator: [
     {
       name: 'variant',
-      type: 'segmented',
+      type: 'select',
       initialValue: 'filled',
       defaultValue: 'filled',
       data: [
         { label: 'filled', value: 'filled' },
         { label: 'light', value: 'light' },
         { label: 'outline', value: 'outline' },
+        { label: 'default', value: 'default' },
       ],
     },
     { name: 'radius', type: 'size', initialValue: 'sm', defaultValue: 'sm' },

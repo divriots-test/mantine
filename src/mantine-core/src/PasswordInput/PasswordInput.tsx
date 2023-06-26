@@ -1,12 +1,7 @@
 import React, { forwardRef } from 'react';
-import { useDisclosure, useId } from '@mantine/hooks';
-import {
-  Selectors,
-  DefaultProps,
-  extractSystemStyles,
-  useMantineTheme,
-  useComponentDefaultProps,
-} from '@mantine/styles';
+import { useId, useUncontrolled } from '@mantine/hooks';
+import { Selectors, DefaultProps, useComponentDefaultProps, rem, getSize } from '@mantine/styles';
+import { extractSystemStyles } from '../Box';
 import { ActionIcon } from '../ActionIcon';
 import { TextInputProps, TextInputStylesNames } from '../TextInput';
 import { Input } from '../Input';
@@ -22,34 +17,43 @@ export interface PasswordInputProps
   toggleTabIndex?: -1 | 0;
 
   /** Provide your own visibility toggle icon */
-  visibilityToggleIcon?: React.FC<{ reveal: boolean; size: number }>;
+  visibilityToggleIcon?: React.FC<{ reveal: boolean; size: number | string }>;
 
   /** aria-label for visibility toggle button */
   visibilityToggleLabel?: string;
+
+  /** Determines whether input content should be visible (controlled) */
+  visible?: boolean;
+
+  /** Determines whether input content should be visible (uncontrolled) */
+  defaultVisible?: boolean;
+
+  /** Called when visibility changes */
+  onVisibilityChange?(visible: boolean): void;
 }
 
 const buttonSizes = {
-  xs: 22,
-  sm: 28,
-  md: 26,
-  lg: 32,
-  xl: 40,
+  xs: rem(22),
+  sm: rem(26),
+  md: rem(28),
+  lg: rem(32),
+  xl: rem(40),
 };
 
 const iconSizes = {
-  xs: 12,
-  sm: 15,
-  md: 17,
-  lg: 19,
-  xl: 21,
+  xs: rem(12),
+  sm: rem(15),
+  md: rem(17),
+  lg: rem(19),
+  xl: rem(21),
 };
 
 const rightSectionSizes = {
-  xs: 28,
-  sm: 34,
-  md: 34,
-  lg: 44,
-  xl: 54,
+  xs: rem(28),
+  sm: rem(32),
+  md: rem(34),
+  lg: rem(44),
+  xl: rem(54),
 };
 
 const defaultProps: Partial<PasswordInputProps> = {
@@ -89,41 +93,52 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>((p
     unstyled,
     visibilityToggleLabel,
     withAsterisk,
+    inputContainer,
+    iconWidth,
     inputWrapperOrder,
+    visible,
+    defaultVisible,
+    onVisibilityChange,
     ...others
   } = useComponentDefaultProps('PasswordInput', defaultProps, props);
 
-  const theme = useMantineTheme();
-  const rightSectionWidth = theme.fn.size({ size, sizes: rightSectionSizes });
-  const { classes, cx } = useStyles(
-    { size, rightSectionWidth },
-    { name: 'PasswordInput', classNames, styles, unstyled }
+  const rightSectionWidth = getSize({ size, sizes: rightSectionSizes });
+  const { classes } = useStyles(
+    { rightSectionWidth },
+    { name: 'PasswordInput', classNames, styles, unstyled, size, variant }
   );
   const uuid = useId(id);
   const { systemStyles, rest } = extractSystemStyles(others);
-  const [reveal, { toggle }] = useDisclosure(false);
+  const [_visible, setVisibility] = useUncontrolled({
+    value: visible,
+    defaultValue: defaultVisible,
+    finalValue: false,
+    onChange: onVisibilityChange,
+  });
+
+  const toggleVisibility = () => setVisibility(!_visible);
 
   const rightSection = (
     <ActionIcon<'button'>
       className={classes.visibilityToggle}
       tabIndex={toggleTabIndex}
       radius={radius}
-      size={theme.fn.size({ size, sizes: buttonSizes })}
+      size={getSize({ size, sizes: buttonSizes })}
       aria-hidden={!visibilityToggleLabel}
       aria-label={visibilityToggleLabel}
       unstyled={unstyled}
       onMouseDown={(event) => {
         event.preventDefault();
-        toggle();
+        toggleVisibility();
       }}
       onKeyDown={(event) => {
         if (event.key === ' ') {
           event.preventDefault();
-          toggle();
+          toggleVisibility();
         }
       }}
     >
-      <VisibilityToggleIcon reveal={reveal} size={theme.fn.size({ size, sizes: iconSizes })} />
+      <VisibilityToggleIcon reveal={_visible} size={getSize({ size, sizes: iconSizes })} />
     </ActionIcon>
   );
 
@@ -147,12 +162,14 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>((p
       unstyled={unstyled}
       withAsterisk={withAsterisk}
       inputWrapperOrder={inputWrapperOrder}
+      inputContainer={inputContainer}
+      variant={variant}
       {...systemStyles}
       {...wrapperProps}
     >
       <Input<'div'>
         component="div"
-        invalid={!!error}
+        error={error}
         icon={icon}
         size={size}
         classNames={{ ...classNames, input: classes.input }}
@@ -164,14 +181,14 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>((p
         rightSection={!disabled && rightSection}
         variant={variant}
         unstyled={unstyled}
+        iconWidth={iconWidth}
       >
         <input
-          type={reveal ? 'text' : 'password'}
+          type={_visible ? 'text' : 'password'}
           required={required}
-          className={cx(classes.innerInput, {
-            [classes.withIcon]: icon,
-            [classes.invalid]: !!error,
-          })}
+          data-invalid={!!error || undefined}
+          data-with-icon={!!icon || undefined}
+          className={classes.innerInput}
           disabled={disabled}
           id={uuid}
           ref={ref}

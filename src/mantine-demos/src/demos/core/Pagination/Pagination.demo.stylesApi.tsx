@@ -1,4 +1,5 @@
 import React from 'react';
+import { MantineDemo } from '@mantine/ds';
 import { Pagination } from '@mantine/core';
 
 const code = `
@@ -10,7 +11,7 @@ function Demo() {
       total={10}
       position="center"
       styles={(theme) => ({
-        item: {
+        control: {
           '&[data-active]': {
             backgroundImage: theme.fn.gradient({ from: 'red', to: 'yellow' }),
           },
@@ -27,7 +28,7 @@ function Demo() {
       total={10}
       position="center"
       styles={(theme) => ({
-        item: {
+        control: {
           '&[data-active]': {
             backgroundImage: theme.fn.gradient({ from: 'red', to: 'yellow' }),
           },

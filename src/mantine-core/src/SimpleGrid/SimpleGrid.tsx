@@ -6,14 +6,19 @@ import useStyles, { SimpleGridBreakpoint, SimpleGridStylesParams } from './Simpl
 export interface SimpleGridProps
   extends DefaultProps<never, SimpleGridStylesParams>,
     React.ComponentPropsWithoutRef<'div'> {
+  variant?: string;
+
   /** Breakpoints data to change items per row and spacing based on max-width */
   breakpoints?: SimpleGridBreakpoint[];
 
   /** Default amount of columns, used when none of breakpoints can be applied  */
   cols?: number;
 
-  /** Default spacing between columns, used when none of breakpoints can be applied */
+  /** Spacing between columns, used when none of breakpoints can be applied */
   spacing?: MantineNumberSize;
+
+  /** Vertical spacing between columns, used when none of breakpoints can be applied  */
+  verticalSpacing?: MantineNumberSize;
 }
 
 const defaultProps: Partial<SimpleGridProps> = {
@@ -23,12 +28,21 @@ const defaultProps: Partial<SimpleGridProps> = {
 };
 
 export const SimpleGrid = forwardRef<HTMLDivElement, SimpleGridProps>((props, ref) => {
-  const { className, breakpoints, cols, spacing, children, unstyled, ...others } =
-    useComponentDefaultProps('SimpleGrid', defaultProps, props);
+  const {
+    className,
+    breakpoints,
+    cols,
+    spacing,
+    verticalSpacing,
+    children,
+    unstyled,
+    variant,
+    ...others
+  } = useComponentDefaultProps('SimpleGrid', defaultProps, props);
 
   const { classes, cx } = useStyles(
-    { breakpoints, cols, spacing },
-    { unstyled, name: 'SimpleGrid' }
+    { breakpoints, cols, spacing, verticalSpacing },
+    { name: 'SimpleGrid', unstyled, variant }
   );
 
   return (

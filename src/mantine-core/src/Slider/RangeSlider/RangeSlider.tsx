@@ -1,5 +1,5 @@
 import React, { useRef, useState, forwardRef, useEffect } from 'react';
-import { useMove, useUncontrolled, useMergedRef } from '@mantine/hooks';
+import { useMove, useUncontrolled } from '@mantine/hooks';
 import {
   DefaultProps,
   MantineNumberSize,
@@ -27,13 +27,15 @@ type Value = [number, number];
 export interface RangeSliderProps
   extends DefaultProps<RangeSliderStylesNames>,
     Omit<React.ComponentPropsWithoutRef<'div'>, 'value' | 'onChange' | 'defaultValue'> {
+  variant?: string;
+
   /** Color from theme.colors */
   color?: MantineColor;
 
-  /** Track border-radius from theme or number to set border-radius in px */
+  /** Key of theme.radius or any valid CSS value to set border-radius, theme.defaultRadius by default */
   radius?: MantineNumberSize;
 
-  /** Predefined track and thumb size, number to set sizes in px */
+  /** Predefined track and thumb size, number to set sizes */
   size?: MantineNumberSize;
 
   /** Minimal possible value */
@@ -44,6 +46,9 @@ export interface RangeSliderProps
 
   /** Minimal range interval */
   minRange?: number;
+
+  /** Maximum range interval */
+  maxRange?: number;
 
   /** Number by which value will be incremented/decremented with thumb drag and arrows */
   step?: number;
@@ -99,8 +104,14 @@ export interface RangeSliderProps
   /** Disables slider */
   disabled?: boolean;
 
-  /** Thumb width and height in px */
+  /** Thumb width and height */
   thumbSize?: number;
+
+  /** A transformation function, to change the scale of the slider */
+  scale?: (value: number) => number;
+
+  /** Allows the track to be inverted */
+  inverted?: boolean;
 }
 
 const defaultProps: Partial<RangeSliderProps> = {
@@ -119,6 +130,7 @@ const defaultProps: Partial<RangeSliderProps> = {
   thumbToLabel: '',
   showLabelOnHover: true,
   disabled: false,
+  scale: (v) => v,
 };
 
 export const RangeSlider = forwardRef<HTMLDivElement, RangeSliderProps>((props, ref) => {
@@ -134,6 +146,7 @@ export const RangeSlider = forwardRef<HTMLDivElement, RangeSliderProps>((props, 
     min,
     max,
     minRange,
+    maxRange,
     step,
     precision,
     defaultValue,
@@ -151,6 +164,9 @@ export const RangeSlider = forwardRef<HTMLDivElement, RangeSliderProps>((props, 
     disabled,
     unstyled,
     thumbSize,
+    scale,
+    inverted,
+    variant,
     ...others
   } = useComponentDefaultProps('RangeSlider', defaultProps, props);
 
@@ -190,12 +206,16 @@ export const RangeSlider = forwardRef<HTMLDivElement, RangeSliderProps>((props, 
     clone[index] = val;
 
     if (index === 0) {
-      if (val > clone[1] - minRange) {
+      if (val > clone[1] - (minRange - 0.000000001)) {
         clone[1] = Math.min(val + minRange, max);
       }
 
-      if (val > (max - minRange || min)) {
+      if (val > (max - (minRange - 0.000000001) || min)) {
         clone[index] = valueRef.current[index];
+      }
+
+      if (clone[1] - val > maxRange) {
+        clone[1] = val + maxRange;
       }
     }
 
@@ -206,6 +226,10 @@ export const RangeSlider = forwardRef<HTMLDivElement, RangeSliderProps>((props, 
 
       if (val < clone[0] + minRange) {
         clone[index] = valueRef.current[index];
+      }
+
+      if (val - clone[0] > maxRange) {
+        clone[0] = val - maxRange;
       }
     }
 
@@ -229,11 +253,7 @@ export const RangeSlider = forwardRef<HTMLDivElement, RangeSliderProps>((props, 
     theme.dir
   );
 
-  function handleThumbMouseDown(
-    event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
-    index: number
-  ) {
-    event.stopPropagation();
+  function handleThumbMouseDown(index: number) {
     thumbIndex.current = index;
   }
 
@@ -359,27 +379,21 @@ export const RangeSlider = forwardRef<HTMLDivElement, RangeSliderProps>((props, 
     <SliderRoot
       {...others}
       size={size}
-      ref={useMergedRef(container, ref)}
-      onTouchStartCapture={handleTrackMouseDownCapture}
-      onTouchEndCapture={() => {
-        thumbIndex.current = -1;
-      }}
-      onMouseDownCapture={handleTrackMouseDownCapture}
-      onMouseUpCapture={() => {
-        thumbIndex.current = -1;
-      }}
-      onKeyDownCapture={handleTrackKeydownCapture}
+      ref={ref}
       styles={styles}
       classNames={classNames}
       disabled={disabled}
       unstyled={unstyled}
+      variant={variant}
     >
       <Track
         offset={positions[0]}
         marksOffset={_value[0]}
         filled={positions[1] - positions[0]}
         marks={marks}
+        inverted={inverted}
         size={size}
+        thumbSize={thumbSize}
         radius={radius}
         color={color}
         min={min}
@@ -387,8 +401,6 @@ export const RangeSlider = forwardRef<HTMLDivElement, RangeSliderProps>((props, 
         value={_value[1]}
         styles={styles}
         classNames={classNames}
-        onMouseEnter={showLabelOnHover ? () => setHovered(true) : undefined}
-        onMouseLeave={showLabelOnHover ? () => setHovered(false) : undefined}
         onChange={(val) => {
           const nearestValue = Math.abs(_value[0] - val) > Math.abs(_value[1] - val) ? 1 : 0;
           const clone: Value = [..._value];
@@ -397,23 +409,40 @@ export const RangeSlider = forwardRef<HTMLDivElement, RangeSliderProps>((props, 
         }}
         disabled={disabled}
         unstyled={unstyled}
+        variant={variant}
+        containerProps={{
+          ref: container,
+          onMouseEnter: showLabelOnHover ? () => setHovered(true) : undefined,
+          onMouseLeave: showLabelOnHover ? () => setHovered(false) : undefined,
+          onTouchStartCapture: handleTrackMouseDownCapture,
+          onTouchEndCapture: () => {
+            thumbIndex.current = -1;
+          },
+          onMouseDownCapture: handleTrackMouseDownCapture,
+          onMouseUpCapture: () => {
+            thumbIndex.current = -1;
+          },
+          onKeyDownCapture: handleTrackKeydownCapture,
+        }}
       >
         <Thumb
           {...sharedThumbProps}
-          value={_value[0]}
+          value={scale(_value[0])}
           position={positions[0]}
           dragging={active}
-          label={typeof label === 'function' ? label(_value[0]) : label}
+          label={typeof label === 'function' ? label(scale(_value[0])) : label}
           ref={(node) => {
             thumbs.current[0] = node;
           }}
           thumbLabel={thumbFromLabel}
-          onMouseDown={(event) => handleThumbMouseDown(event, 0)}
+          onMouseDown={() => handleThumbMouseDown(0)}
           onFocus={() => setFocused(0)}
-          showLabelOnHover={showLabelOnHover && hovered}
+          showLabelOnHover={showLabelOnHover}
+          isHovered={hovered}
           disabled={disabled}
           unstyled={unstyled}
           thumbSize={thumbSize}
+          variant={variant}
         >
           {hasArrayThumbChildren ? thumbChildren[0] : thumbChildren}
         </Thumb>
@@ -421,19 +450,21 @@ export const RangeSlider = forwardRef<HTMLDivElement, RangeSliderProps>((props, 
         <Thumb
           {...sharedThumbProps}
           thumbLabel={thumbToLabel}
-          value={_value[1]}
+          value={scale(_value[1])}
           position={positions[1]}
           dragging={active}
-          label={typeof label === 'function' ? label(_value[1]) : label}
+          label={typeof label === 'function' ? label(scale(_value[1])) : label}
           ref={(node) => {
             thumbs.current[1] = node;
           }}
-          onMouseDown={(event) => handleThumbMouseDown(event, 1)}
+          onMouseDown={() => handleThumbMouseDown(1)}
           onFocus={() => setFocused(1)}
-          showLabelOnHover={showLabelOnHover && hovered}
+          showLabelOnHover={showLabelOnHover}
+          isHovered={hovered}
           disabled={disabled}
           unstyled={unstyled}
           thumbSize={thumbSize}
+          variant={variant}
         >
           {hasArrayThumbChildren ? thumbChildren[1] : thumbChildren}
         </Thumb>

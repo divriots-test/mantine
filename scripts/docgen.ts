@@ -48,6 +48,9 @@ const EXTRA_FILES_PATHS = [
   // Checkbox
   '../src/mantine-core/src/Checkbox/CheckboxGroup/CheckboxGroup.tsx',
 
+  // Switch
+  '../src/mantine-core/src/Switch/SwitchGroup/SwitchGroup.tsx',
+
   // Radio
   '../src/mantine-core/src/Radio/RadioGroup/RadioGroup.tsx',
 
@@ -76,16 +79,20 @@ const EXTRA_FILES_PATHS = [
   // Stepper
   '../src/mantine-core/src/Stepper/Step/Step.tsx',
 
+  // Pagination
+  '../src/mantine-core/src/Pagination/PaginationRoot/PaginationRoot.tsx',
+  '../src/mantine-core/src/Pagination/PaginationItems/PaginationItems.tsx',
+
   // Carousel
   '../src/mantine-carousel/src/Carousel.tsx',
   '../src/mantine-carousel/src/CarouselSlide/CarouselSlide.tsx',
 
   // Other
-  '../src/mantine-notifications/src/NotificationsProvider/NotificationsProvider.tsx',
+  '../src/mantine-notifications/src/Notifications/Notifications.tsx',
   '../src/mantine-prism/src/Prism/Prism.tsx',
   '../src/mantine-spotlight/src/SpotlightProvider.tsx',
   '../src/mantine-modals/src/ModalsProvider.tsx',
-  '../src/mantine-rte/src/components/RichTextEditor/RichTextEditor.tsx',
+  '../src/mantine-tiptap/src/RichTextEditor.tsx',
   '../src/mantine-nprogress/src/NavigationProgress.tsx',
   '../src/mantine-dropzone/src/Dropzone.tsx',
   '../src/mantine-dropzone/src/DropzoneFullScreen.tsx',
@@ -95,7 +102,6 @@ const PATHS: DeclarationPath[] = [
   { type: 'package', path: path.join(__dirname, '../src/mantine-core/src') },
   { type: 'package', path: path.join(__dirname, '../src/mantine-dates/src/components') },
   { type: 'package', path: path.join(__dirname, '../src/mantine-dropzone/src') },
-  { type: 'package', path: path.join(__dirname, '../src/mantine-labs/src') },
   ...EXTRA_FILES_PATHS.map((filePath) => ({
     type: 'file' as const,
     path: path.join(__dirname, filePath),

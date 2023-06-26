@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useMove, clampUseMovePosition, UseMovePosition } from '@mantine/hooks';
 import { DefaultProps, MantineSize, Selectors } from '@mantine/styles';
 import { HsvaColor } from '../types';
@@ -11,8 +11,10 @@ export type SaturationStylesNames =
   | ThumbStylesNames;
 
 interface SaturationProps extends DefaultProps<SaturationStylesNames> {
+  variant?: string;
   value: HsvaColor;
   onChange(color: Partial<HsvaColor>): void;
+  onChangeEnd(color: Partial<HsvaColor>): void;
   saturationLabel?: string;
   size: MantineSize;
   color: string;
@@ -23,6 +25,7 @@ interface SaturationProps extends DefaultProps<SaturationStylesNames> {
 export function Saturation({
   value,
   onChange,
+  onChangeEnd,
   focusable = true,
   __staticSelector = 'saturation',
   size,
@@ -31,13 +34,32 @@ export function Saturation({
   classNames,
   styles,
   unstyled,
+  variant,
 }: SaturationProps) {
-  const { classes } = useStyles({ size }, { classNames, styles, name: __staticSelector, unstyled });
-  const [position, setPosition] = useState({ x: value.s / 100, y: 1 - value.v / 100 });
-
-  const { ref } = useMove(({ x, y }) => {
-    onChange({ s: Math.round(x * 100), v: Math.round((1 - y) * 100) });
+  const { classes } = useStyles(null, {
+    classNames,
+    styles,
+    name: __staticSelector,
+    unstyled,
+    variant,
+    size,
   });
+
+  const [position, setPosition] = useState({ x: value.s / 100, y: 1 - value.v / 100 });
+  const positionRef = useRef(position);
+
+  const { ref } = useMove(
+    ({ x, y }) => {
+      positionRef.current = { x, y };
+      onChange({ s: Math.round(x * 100), v: Math.round((1 - y) * 100) });
+    },
+    {
+      onScrubEnd: () => {
+        const { x, y } = positionRef.current;
+        onChangeEnd({ s: Math.round(x * 100), v: Math.round((1 - y) * 100) });
+      },
+    }
+  );
 
   useEffect(() => {
     setPosition({ x: value.s / 100, y: 1 - value.v / 100 });
@@ -47,6 +69,7 @@ export function Saturation({
     event.preventDefault();
     const _position = clampUseMovePosition(pos);
     onChange({ s: Math.round(_position.x * 100), v: Math.round((1 - _position.y) * 100) });
+    onChangeEnd({ s: Math.round(_position.x * 100), v: Math.round((1 - _position.y) * 100) });
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
